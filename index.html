@@ -163,49 +163,43 @@ const db = getFirestore(app);
 
 /* Schedule */
 const schedule = [
-["Week 1",
+["Week 1 (Partial)",
  "Wednesday – pages 3–6",
  "Thursday – pages 7–10",
  "Friday – pages 11–14",
  "Saturday – pages 15–18"
 ],
 ["Week 2",
- "Wednesday – pages 19–22",
- "Thursday – pages 23–26",
- "Friday – pages 27–30",
- "Saturday – pages 31–34"
+ "Sunday – pages 19–22",
+ "Monday – pages 23–26",
+ "Tuesday – pages 27–30",
+ "Wednesday – pages 31–34",
+ "Thursday – pages 35–38",
+ "Friday – pages 39–42",
+ "Saturday – pages 43–46"
 ],
 ["Week 3",
- "Wednesday – pages 35–38",
- "Thursday – pages 39–42",
- "Friday – pages 43–46",
- "Saturday – pages 47–50"
+ "Sunday – pages 47–50",
+ "Monday – pages 51–54",
+ "Tuesday – pages 55–58",
+ "Wednesday – pages 59–62",
+ "Thursday – pages 63–66",
+ "Friday – pages 67–70",
+ "Saturday – pages 71–74"
 ],
 ["Week 4",
- "Wednesday – pages 51–54",
- "Thursday – pages 55–58",
- "Friday – pages 59–62",
- "Saturday – pages 63–66"
+ "Sunday – pages 75–78",
+ "Monday – pages 79–82",
+ "Tuesday – pages 83–86",
+ "Wednesday – pages 87–90",
+ "Thursday – pages 91–94",
+ "Friday – pages 95–98",
+ "Saturday – pages 99–102"
 ],
 ["Week 5",
- "Wednesday – pages 67–70",
- "Thursday – pages 71–74",
- "Friday – pages 75–78",
- "Saturday – pages 79–82"
-],
-["Week 6",
- "Wednesday – pages 83–86",
- "Thursday – pages 87–90",
- "Friday – pages 91–94",
- "Saturday – pages 95–98"
-],
-["Week 7",
- "Wednesday – pages 99–102",
- "Thursday – pages 103–106",
- "Friday – pages 107–110",
- "Saturday – pages 111–114"
-],
-["Week 8",
+ "Sunday – pages 103–106",
+ "Monday – pages 107–110",
+ "Tuesday – pages 111–114",
  "Wednesday – pages 115–118",
  "Thursday – pages 119–122"
 ]
@@ -259,20 +253,21 @@ schedule.forEach(week=>{
     });
 
     /* Notes */
+    const NOTES_PASSWORD = "ajc6skdb7";
     const notes = day.querySelector(".notes");
-    day.querySelector(".notes-btn").onclick =
-      ()=>notes.classList.toggle("active");
-
-    day.querySelectorAll("textarea").forEach(t=>{
-      onSnapshot(ref,snap=>{
-        if(!snap.exists()) return;
-        t.value = snap.data()[t.dataset.slot] || "";
-      });
-
-      t.oninput = () =>
-        setDoc(ref,{ [t.dataset.slot]: t.value },{ merge:true });
-    });
-
+    day.querySelector(".notes-btn").onclick = () => {
+      if (notes.classList.contains("active")) {
+        notes.classList.remove("active");
+        return;
+      }
+      const input = prompt("Enter password to view notes:");
+      if (input === NOTES_PASSWORD) {
+        notes.classList.add("active");
+      } else {
+        alert("Incorrect password");
+      }
+    };
+    
     card.appendChild(day);
   });
 
