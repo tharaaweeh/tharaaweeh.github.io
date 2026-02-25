@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reading Schedule</title>
+<title>Taraaweeh 1447 | Masjid Al-Zikra</title>
 
 <style>
 :root{
@@ -39,8 +39,6 @@ header p{margin:0;color:var(--muted)}
   margin-bottom:28px;
 }
 
-.week h2{margin-top:0}
-
 .day{
   border:1px solid var(--border);
   border-radius:12px;
@@ -55,19 +53,36 @@ header p{margin:0;color:var(--muted)}
 }
 
 .checkbox{
-  width:24px;height:24px;
+  width:24px;
+  height:24px;
   border-radius:6px;
-  background:var(--success);
-  display:grid;place-items:center;
+  border:2px solid var(--border);
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition:.2s;
 }
 
 .checkbox svg{
-  width:16px;height:16px;
-  stroke:#fff;stroke-width:3;
+  width:16px;
+  height:16px;
+  stroke:#fff;
+  stroke-width:3;
+  opacity:0;
 }
+
+.day.checked .checkbox{
+  background:var(--success);
+  border-color:var(--success);
+}
+
+.day.checked .checkbox svg{opacity:1}
 
 .text{
   flex:1;
+}
+
+.day.checked .text{
   text-decoration:line-through;
   color:var(--muted);
 }
@@ -116,8 +131,8 @@ header p{margin:0;color:var(--muted)}
 <div class="container">
 
 <header>
-  <h1>Reading Schedule</h1>
-  <p>Shared notes • Live updates</p>
+  <h1>Taraaweeh Schedule</h1>
+  <p>Masjid Al-Zikuraa</p>
 </header>
 
 <div id="weeks"></div>
@@ -125,7 +140,6 @@ header p{margin:0;color:var(--muted)}
 </div>
 
 <script type="module">
-/* Firebase */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
   getFirestore,
@@ -134,7 +148,7 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* Your Firebase config */
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyAQyGUzfrQQrksE2uE8cIa3oU9M6MB8-Cw",
   authDomain: "tharaaweeh-zikra.firebaseapp.com",
@@ -147,7 +161,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* Schedule data */
+/* Schedule */
 const schedule = [
 ["Week 1",
  "Wednesday – pages 3–6",
@@ -192,16 +206,16 @@ const schedule = [
 ];
 
 const container = document.getElementById("weeks");
-let dayIndex = 0;
+let dayId = 0;
 
-/* Render UI */
 schedule.forEach(week=>{
   const card=document.createElement("div");
   card.className="week";
   card.innerHTML=`<h2>${week[0]}</h2>`;
 
   week.slice(1).forEach(text=>{
-    const id = dayIndex++;
+    const id = dayId++;
+    const ref = doc(db,"days",`day_${id}`);
 
     const day=document.createElement("div");
     day.className="day";
@@ -214,25 +228,34 @@ schedule.forEach(week=>{
           </svg>
         </div>
         <div class="text">${text}</div>
-        <button class="notes-btn">Notes</button>
+        <button class="notes-btn">Imams</button>
       </div>
       <div class="notes">
         ${[0,1,2,3].map(s=>`
           <div class="slot">
             <textarea
               placeholder="Note ${s+1}"
-              data-day="${id}"
               data-slot="${s}"></textarea>
           </div>
         `).join("")}
       </div>
     `;
 
+    /* Checkbox toggle */
+    const checkbox = day.querySelector(".checkbox");
+    checkbox.onclick = () =>
+      setDoc(ref,{ checked: !day.classList.contains("checked") },{ merge:true });
+
+    /* Sync checkbox */
+    onSnapshot(ref,snap=>{
+      if(!snap.exists()) return;
+      day.classList.toggle("checked", !!snap.data().checked);
+    });
+
+    /* Notes */
     const notes = day.querySelector(".notes");
     day.querySelector(".notes-btn").onclick =
       ()=>notes.classList.toggle("active");
-
-    const ref = doc(db,"notes",`day_${id}`);
 
     day.querySelectorAll("textarea").forEach(t=>{
       onSnapshot(ref,snap=>{
@@ -240,11 +263,8 @@ schedule.forEach(week=>{
         t.value = snap.data()[t.dataset.slot] || "";
       });
 
-      t.oninput = ()=>setDoc(
-        ref,
-        { [t.dataset.slot]: t.value },
-        { merge:true }
-      );
+      t.oninput = () =>
+        setDoc(ref,{ [t.dataset.slot]: t.value },{ merge:true });
     });
 
     card.appendChild(day);
